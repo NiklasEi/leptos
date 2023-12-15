@@ -204,8 +204,13 @@ impl ResolvedStaticPath {
         IV: IntoView + 'static,
     {
         let html = self.build(options, app_fn, additional_context).await;
-        let path = Path::new(&options.site_root)
-            .join(format!("{}.static.html", self.0.trim_start_matches('/')));
+        let file_path = if self.0.trim_start_matches('/').is_empty() {
+            "index"
+        } else {
+            self.0.trim_start_matches('/')
+        };
+        let path =
+            Path::new(&options.site_root).join(format!("{}.html", file_path));
 
         if let Some(path) = path.parent() {
             std::fs::create_dir_all(path)?
@@ -277,33 +282,6 @@ where
     Ok(())
 }
 
-#[doc(hidden)]
-#[cfg(feature = "ssr")]
-pub fn purge_dir_of_static_files(path: PathBuf) -> Result<(), std::io::Error> {
-    for entry in path.read_dir()? {
-        let entry = entry?;
-        let path = entry.path();
-        if path.is_dir() {
-            purge_dir_of_static_files(path)?;
-        } else if path.is_file() {
-            if let Some(name) = path.file_name().and_then(|i| i.to_str()) {
-                if name.ends_with(".static.html") {
-                    std::fs::remove_file(path)?;
-                }
-            }
-        }
-    }
-    Ok(())
-}
-
-/// Purge all statically generated route files
-#[cfg(feature = "ssr")]
-pub fn purge_all_static_routes<IV>(
-    options: &LeptosOptions,
-) -> Result<(), std::io::Error> {
-    purge_dir_of_static_files(Path::new(&options.site_root).to_path_buf())
-}
-
 pub type StaticData = Arc<StaticDataFn>;
 
 pub type StaticDataFn = dyn Fn() -> Pin<Box<dyn Future<Output = StaticParamsMap> + Send + Sync>>
@@ -350,17 +328,14 @@ pub enum StaticResponse {
 #[inline(always)]
 #[cfg(feature = "ssr")]
 pub fn static_file_path(options: &LeptosOptions, path: &str) -> String {
-    format!("{}{}.static.html", options.site_root, path)
+    format!("{}{}.html", options.site_root, path)
 }
 
 #[doc(hidden)]
 #[inline(always)]
 #[cfg(feature = "ssr")]
 pub fn not_found_path(options: &LeptosOptions) -> String {
-    format!(
-        "{}{}.static.html",
-        options.site_root, options.not_found_path
-    )
+    format!("{}{}.html", options.site_root, options.not_found_path)
 }
 
 #[doc(hidden)]
@@ -444,6 +419,6 @@ where
         .build(options, app_fn, additional_context)
         .await;
     let path = Path::new(&options.site_root)
-        .join(format!("{}.static.html", path.trim_start_matches('/')));
+        .join(format!("{}.html", path.trim_start_matches('/')));
     StaticResponse::WriteFile { body, path }
 }
