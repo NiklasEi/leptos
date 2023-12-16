@@ -886,7 +886,7 @@ pub fn generate_route_list<IV>(
 where
     IV: IntoView + 'static,
 {
-    generate_route_list_with_exclusions_and_ssg(app_fn, None).0
+    generate_route_list_with_exclusions_and_ssg(app_fn, None, || {}).0
 }
 
 /// Generates a list of all routes defined in Leptos's Router in your app. We can then use this to automatically
@@ -898,7 +898,7 @@ pub fn generate_route_list_with_ssg<IV>(
 where
     IV: IntoView + 'static,
 {
-    generate_route_list_with_exclusions_and_ssg(app_fn, None)
+    generate_route_list_with_exclusions_and_ssg(app_fn, None, || {})
 }
 
 /// Generates a list of all routes defined in Leptos's Router in your app. We can then use this to automatically
@@ -912,7 +912,7 @@ pub fn generate_route_list_with_exclusions<IV>(
 where
     IV: IntoView + 'static,
 {
-    generate_route_list_with_exclusions_and_ssg(app_fn, excluded_routes).0
+    generate_route_list_with_exclusions_and_ssg(app_fn, excluded_routes, || {}).0
 }
 
 /// Generates a list of all routes defined in Leptos's Router in your app. We can then use this to automatically
@@ -922,6 +922,7 @@ where
 pub fn generate_route_list_with_exclusions_and_ssg<IV>(
     app_fn: impl Fn() -> IV + 'static + Clone,
     excluded_routes: Option<Vec<String>>,
+    additional_context: impl Fn() + 'static + Clone,
 ) -> (Vec<RouteListing>, StaticDataMap)
 where
     IV: IntoView + 'static,
