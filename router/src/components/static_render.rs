@@ -17,6 +17,8 @@ use std::{
     pin::Pin,
     sync::Arc,
 };
+use std::sync::Mutex;
+use bevy_ecs::system::BoxedSystem;
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct StaticParamsMap(pub LinearMap<String, Vec<String>>);
@@ -252,12 +254,12 @@ where
     IV: IntoView + 'static,
 {
     let mut static_data: HashMap<&str, StaticParamsMap> = HashMap::new();
-    for (key, value) in static_data_map {
-        match value {
-            Some(value) => static_data.insert(key, value.as_ref()().await),
-            None => static_data.insert(key, StaticParamsMap::default()),
-        };
-    }
+    // for (key, value) in static_data_map {
+    //     match value {
+    //         Some(value) => static_data.insert(key, value.as_ref()().await),
+    //         None => static_data.insert(key, StaticParamsMap::default()),
+    //     };
+    // }
     let static_routes = routes
         .iter()
         .filter(|route| route.static_mode().is_some())
@@ -282,7 +284,7 @@ where
     Ok(())
 }
 
-pub type StaticData = Arc<StaticDataFn>;
+pub type StaticData = Arc<Mutex<BoxedSystem<(), StaticParamsMap>>>;
 
 pub type StaticDataFn = dyn Fn() -> Pin<Box<dyn Future<Output = StaticParamsMap> + Send + Sync>>
     + Send

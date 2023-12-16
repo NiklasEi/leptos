@@ -12,6 +12,8 @@ use std::{
     rc::Rc,
     sync::Arc,
 };
+use std::sync::Mutex;
+use bevy_ecs::system::BoxedSystem;
 
 thread_local! {
     static ROUTE_ID: Cell<usize> = Cell::new(0);
@@ -153,7 +155,7 @@ where
     tracing::instrument(level = "info", skip_all,)
 )]
 #[component(transparent)]
-pub fn StaticRoute<E, F, P, S>(
+pub fn StaticRoute<E, F, P>(
     /// The path fragment that this route should match. This can be static (`users`),
     /// include a parameter (`:id`) or an optional parameter (`:id?`), or match a
     /// wildcard (`user/*any`).
@@ -163,7 +165,7 @@ pub fn StaticRoute<E, F, P, S>(
     /// or `|| view! { <MyComponent/>` } or even, for a component with no props, `MyComponent`).
     view: F,
     /// Creates a map of the params that should be built for a particular route.
-    static_params: S,
+    static_params: Arc<Mutex<BoxedSystem<(), StaticParamsMap>>>,
     /// The static route mode
     #[prop(optional)]
     mode: StaticMode,
@@ -178,11 +180,7 @@ pub fn StaticRoute<E, F, P, S>(
 where
     E: IntoView,
     F: Fn() -> E + 'static,
-    P: core::fmt::Display,
-    S: Fn() -> Pin<Box<dyn Future<Output = StaticParamsMap> + Send + Sync>>
-        + Send
-        + Sync
-        + 'static,
+    P: core::fmt::Display
 {
     define_route(
         children,
@@ -192,7 +190,7 @@ where
         &[Method::Get],
         data,
         Some(mode),
-        Some(Arc::new(static_params)),
+        Some(static_params),
     )
 }
 
