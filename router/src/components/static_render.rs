@@ -1,5 +1,6 @@
 #[cfg(feature = "ssr")]
 use crate::{RouteListing, RouterIntegrationContext, ServerIntegration};
+use bevy_ecs::system::BoxedSystem;
 #[cfg(feature = "ssr")]
 use leptos::{provide_context, IntoView, LeptosOptions};
 #[cfg(feature = "ssr")]
@@ -15,10 +16,8 @@ use std::{
     hash::{Hash, Hasher},
     path::PathBuf,
     pin::Pin,
-    sync::Arc,
+    sync::{Arc, Mutex},
 };
-use std::sync::Mutex;
-use bevy_ecs::system::BoxedSystem;
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct StaticParamsMap(pub LinearMap<String, Vec<String>>);
@@ -248,12 +247,12 @@ pub async fn build_static_routes_with_additional_context<IV>(
     app_fn: impl Fn() -> IV + 'static + Clone,
     additional_context: impl Fn() + 'static + Clone,
     routes: &[RouteListing],
-    static_data_map: &StaticDataMap,
+    _static_data_map: &StaticDataMap,
 ) -> Result<(), std::io::Error>
 where
     IV: IntoView + 'static,
 {
-    let mut static_data: HashMap<&str, StaticParamsMap> = HashMap::new();
+    let static_data: HashMap<&str, StaticParamsMap> = HashMap::new();
     // for (key, value) in static_data_map {
     //     match value {
     //         Some(value) => static_data.insert(key, value.as_ref()().await),

@@ -2,18 +2,15 @@ use crate::{
     matching::{resolve_path, PathMatch, RouteDefinition, RouteMatch},
     ParamsMap, RouterContext, SsrMode, StaticData, StaticMode, StaticParamsMap,
 };
+use bevy_ecs::system::BoxedSystem;
 use leptos::{leptos_dom::Transparent, *};
 use std::{
     any::Any,
     borrow::Cow,
     cell::{Cell, RefCell},
-    future::Future,
-    pin::Pin,
     rc::Rc,
-    sync::Arc,
+    sync::{Arc, Mutex},
 };
-use std::sync::Mutex;
-use bevy_ecs::system::BoxedSystem;
 
 thread_local! {
     static ROUTE_ID: Cell<usize> = Cell::new(0);
@@ -180,7 +177,7 @@ pub fn StaticRoute<E, F, P>(
 where
     E: IntoView,
     F: Fn() -> E + 'static,
-    P: core::fmt::Display
+    P: core::fmt::Display,
 {
     define_route(
         children,
