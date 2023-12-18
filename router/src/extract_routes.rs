@@ -108,7 +108,6 @@ impl RouteListing {
 /// [`viz`]: <https://docs.rs/viz/>
 pub fn generate_route_list_inner<IV>(
     app_fn: impl Fn() -> IV + 'static + Clone,
-    additional_context: impl Fn() + 'static + Clone,
 ) -> (Vec<RouteListing>, StaticDataMap)
 where
     IV: IntoView + 'static,
