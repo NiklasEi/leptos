@@ -220,7 +220,7 @@ pub async fn build_static_routes<IV>(
     app_fn: impl Fn() -> IV + 'static + Clone,
     routes: &[RouteListing],
     static_data_map: &StaticDataMap,
-) -> Result<(), std::io::Error>
+) -> Result<Vec<ResolvedStaticPath>, std::io::Error>
 where
     IV: IntoView + 'static,
 {
@@ -241,7 +241,7 @@ pub async fn build_static_routes_with_additional_context<IV>(
     additional_context: impl Fn() + 'static + Clone,
     routes: &[RouteListing],
     static_data_map: &StaticDataMap,
-) -> Result<(), std::io::Error>
+) -> Result<Vec<ResolvedStaticPath>, std::io::Error>
 where
     IV: IntoView + 'static,
 {
@@ -259,6 +259,7 @@ where
         .iter()
         .filter(|route| route.static_mode().is_some())
         .collect::<Vec<_>>();
+    let mut resolved_paths = vec![];
     // TODO: maybe make this concurrent in some capacity
     for route in static_routes {
         let mut path = StaticPath::new(route.leptos_path());
@@ -275,9 +276,10 @@ where
             println!("building static route: {}", path);
             path.write(options, app_fn.clone(), additional_context.clone())
                 .await?;
+            resolved_paths.push(path);
         }
     }
-    Ok(())
+    Ok(resolved_paths)
 }
 
 pub type StaticData = Arc<StaticDataFn>;
